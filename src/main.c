@@ -1,5 +1,6 @@
 #include "buff.h"
 #include "opts.h"
+#include "graph.h"
 #include <stdlib.h>
 
 //
@@ -14,14 +15,17 @@ int main(int argc, const char *const *argv) {
     if (open_buff(&start, &blocks, opt))
         return 1;
 
-    // < Graphics stuff >
-    // < load user config (shared library) >
-    // < register user function as window input callback >
-    // < begin mainloop >
-
-//printf("mainloop here\n");
-    while (start != NULL) {
-        fputs(start->data, stdout);
-        start = start->next;
+    GRAPH graph = graph_init();
+    if (!graph) {
+        return 1;
     }
+
+    // < load user config (shared library) >
+
+    // < set mainloop callbacks >
+    // < set mainloop data pointers >
+
+    int ret = mainloop(graph);
+    graph_destroy(&graph);
+    return ret;
 }
