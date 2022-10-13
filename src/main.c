@@ -11,7 +11,7 @@ int main(int argc, const char *const *argv) {
         return 2;
 
     struct buff_node *start;
-    blockset blocks;
+    BLOCKSET blocks;
     if (open_buff(&start, &blocks, opt))
         return 1;
 

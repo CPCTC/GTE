@@ -5,11 +5,11 @@
 
 //
 
-static struct buff_node *buff_from_file(FILE *stream, blockset blocks);
+static struct buff_node *buff_from_file(FILE *stream, BLOCKSET blocks);
 
 //
 
-int open_buff(struct buff_node **buff, blockset *blocks, struct options opt) {
+int open_buff(struct buff_node **buff, BLOCKSET *blocks, struct options opt) {
     *buff = NULL;
     *blocks = blockset_init_default();
     if (!*blocks) {
@@ -34,7 +34,7 @@ int open_buff(struct buff_node **buff, blockset *blocks, struct options opt) {
     return 0;
 }
 
-struct buff_node *buff_from_file(FILE *stream, blockset blocks) {
+struct buff_node *buff_from_file(FILE *stream, BLOCKSET blocks) {
     long pos = ftell(stream);
     if (fseek(stream, 0, SEEK_END)) {
         fprintf(stderr, "Can't seek on stream\n");

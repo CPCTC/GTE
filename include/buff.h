@@ -11,4 +11,4 @@ struct buff_node {
     char data[BUFF_DATA_CAP];
 };
 
-int open_buff(struct buff_node **buff, blockset *blocks, struct options opt);
+int open_buff(struct buff_node **buff, BLOCKSET *blocks, struct options opt);
