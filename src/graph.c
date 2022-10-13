@@ -23,9 +23,17 @@ err_retn:
     return NULL;
 }
 
-int mainloop(GRAPH g) {
+int mainloop(GRAPH hg) {
+    Graph *g = hg;
     (void) g;
-    printf("mainloop\n");
+
+    uint32_t ver;
+    vkEnumerateInstanceVersion(&ver);
+    printf("Welcome to Vulkan v.%u.%u.%u-var%u)!\n",
+            VK_API_VERSION_MAJOR(ver),
+            VK_API_VERSION_MINOR(ver),
+            VK_API_VERSION_PATCH(ver),
+            VK_API_VERSION_VARIANT(ver));
     sleep(5);
     return 0;
 }

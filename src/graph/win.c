@@ -12,6 +12,7 @@ GLFWwindow *win_open(void) {
 
     int w, h;
     if (default_win_size(&w, &h)) goto err_terminate;
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow *ret = glfwCreateWindow(w, h, APPNAME, NULL, NULL);
     if (!ret) {
         fprintf(stderr, "Can't open window: %s\n", glfw_err_str());

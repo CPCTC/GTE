@@ -6,7 +6,7 @@ name="GTE"
 cc="gcc"
 flags="-Wall -Wextra -Wpedantic -Werror -g -Og"
 compile_flags="-iquote include"
-link_flags="$(pkg-config --libs glfw3)"
+link_flags="$(pkg-config --libs glfw3 vulkan)"
 max_threads=4
 
 build_dir=.build
