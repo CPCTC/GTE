@@ -12,3 +12,4 @@ struct buff_node {
 };
 
 int open_buff(struct buff_node **buff, BLOCKSET *blocks, struct options opt);
+void close_buff(BLOCKSET *blocks);

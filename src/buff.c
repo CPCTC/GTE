@@ -34,6 +34,17 @@ int open_buff(struct buff_node **buff, BLOCKSET *blocks, struct options opt) {
     return 0;
 }
 
+void close_buff(BLOCKSET *blocks) {
+    BLOCKSET_ITER it = blockset_begin(*blocks);
+    void *block;
+    char v;
+    while (blockset_next(it, &block, &v)) {
+        free(block);
+    }
+    blockset_end(&it);
+    blockset_free(blocks);
+}
+
 struct buff_node *buff_from_file(FILE *stream, BLOCKSET blocks) {
     long pos = ftell(stream);
     if (fseek(stream, 0, SEEK_END)) {

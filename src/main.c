@@ -27,5 +27,6 @@ int main(int argc, const char *const *argv) {
 
     int ret = mainloop(graph);
     graph_destroy(&graph);
+    close_buff(&blocks); start = NULL;
     return ret;
 }
