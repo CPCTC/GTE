@@ -1,4 +1,5 @@
 #include "graph.h"
+#include "graph/inst.h"
 #include "graph/win.h"
 #include <stdlib.h>
 
@@ -7,6 +8,7 @@
 
 typedef struct {
     GLFWwindow *win;
+    VkInstance inst;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -14,9 +16,13 @@ GRAPH graph_init(void) {
     if (!g) goto err_retn;
     g->win = win_open();
     if (!g->win) goto err_free;
+    g->inst = inst_create(g->win);
+    if (!g->inst) goto err_close;
     // ...
     return g;
 
+err_close:
+    win_close(&g->win);
 err_free:
     free(g);
 err_retn:
@@ -40,6 +46,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    inst_destroy(&g->inst);
     win_close(&g->win);
     free(g);
     *hg = NULL;
