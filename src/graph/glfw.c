@@ -1,4 +1,10 @@
-#include "graph/verr.h"
+#include "graph/glfw.h"
+
+const char *glfw_err_str(void) {
+    const char *ret;
+    glfwGetError(&ret);
+    return ret;
+}
 
 #define cse(x) case x: err = #x; break;
 

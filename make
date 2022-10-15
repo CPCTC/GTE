@@ -5,8 +5,14 @@
 name="GTE"
 cc="gcc"
 flags="-Wall -Wextra -Wpedantic -Werror -g -Og"
-compile_flags="-iquote include"
-link_flags="$(pkg-config --libs glfw3 vulkan)"
+compile_flags="-iquote include"\
+" -DAPPNAME=\"$name\""\
+" -DAPPVMAJOR=0"\
+" -DAPPVMINOR=0"\
+" -DAPPVPATCH=0"\
+" -DDEBUG"\
+
+link_flags="$(pkg-config --libs glfw3 vulkan libxxhash)"
 max_threads=4
 
 build_dir=.build

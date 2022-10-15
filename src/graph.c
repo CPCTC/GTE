@@ -16,7 +16,7 @@ GRAPH graph_init(void) {
     if (!g) goto err_retn;
     g->win = win_open();
     if (!g->win) goto err_free;
-    g->inst = inst_create(g->win);
+    g->inst = inst_create();
     if (!g->inst) goto err_close;
     // ...
     return g;

@@ -1,7 +1,6 @@
 #include "graph/win.h"
 #include <stdio.h>
 
-static const char *glfw_err_str(void);
 static int default_win_size(int *w, int *h);
 
 GLFWwindow *win_open(void) {
@@ -30,12 +29,6 @@ err_retn:
 void win_close(GLFWwindow **w) {
     glfwDestroyWindow(*w); *w = NULL;
     glfwTerminate();
-}
-
-const char *glfw_err_str(void) {
-    const char *ret;
-    glfwGetError(&ret);
-    return ret;
 }
 
 int default_win_size(int *w, int *h) {

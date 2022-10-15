@@ -1,6 +1,7 @@
 #include "graph/inst.h"
-#include "graph/verr.h"
+#include "graph/inst/ext.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 //
 
@@ -8,11 +9,20 @@ static int check_version(uint32_t *target);
 
 //
 
-VkInstance inst_create(GLFWwindow *win) {
-    (void) win;
+VkInstance inst_create(void) {
+    VkInstance ret = NULL;
 
     uint32_t target_ver;
-    if (check_version(&target_ver)) goto err_retn;
+    if (check_version(&target_ver)) goto out_retn;
+
+    uint32_t nlayers;
+    const char **layers;
+    if (get_layers(&nlayers, &layers)) goto out_retn;
+    if (check_layers(nlayers, layers)) goto out_free_layers;
+    uint32_t nexts;
+    const char **exts;
+    if (get_exts(&nexts, &exts)) goto out_free_layers;
+    if (check_exts(nexts, exts)) goto out_free_exts;
 
     VkApplicationInfo app_info = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -29,22 +39,26 @@ VkInstance inst_create(GLFWwindow *win) {
         .pNext = NULL,
         .flags = 0,
         .pApplicationInfo = &app_info,
-        .enabledLayerCount = 0,
-        .ppEnabledLayerNames = NULL,
-        .enabledExtensionCount = 0,
-        .ppEnabledExtensionNames = NULL,
+        .enabledLayerCount = nlayers,
+        .ppEnabledLayerNames = layers,
+        .enabledExtensionCount = nexts,
+        .ppEnabledExtensionNames = exts,
     };
     VkInstance inst;
     VkResult r = vkCreateInstance(&ic_info, NULL, &inst);
     if (r != VK_SUCCESS) {
-        fprintf(stderr, "Can't create instance: ");
+        fprintf(stderr, "Can't vkCreateInstance: ");
         vulk_err_str(stderr, r);
-        goto err_retn;
+        goto out_free_exts;
     }
-    return inst;
+    ret = inst;
 
-err_retn:
-    return NULL;
+out_free_exts:
+    free(exts); nexts = 0; exts = NULL;
+out_free_layers:
+    free(layers); nlayers = 0; layers = NULL;
+out_retn:
+    return ret;
 }
 
 void inst_destroy(VkInstance *inst) {
