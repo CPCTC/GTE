@@ -11,6 +11,9 @@
 
 const char * const INST_EXTENSIONS[] = {
 "VK_KHR_surface",
+#ifdef DEBUG
+"VK_EXT_debug_utils",
+#endif
 };
 
 //

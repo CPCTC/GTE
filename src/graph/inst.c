@@ -1,5 +1,6 @@
 #include "graph/inst.h"
 #include "graph/inst/ext.h"
+#include "graph/debug.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,6 +25,10 @@ VkInstance inst_create(void) {
     if (get_exts(&nexts, &exts)) goto out_free_layers;
     if (check_exts(nexts, exts)) goto out_free_exts;
 
+#ifdef DEBUG
+    VkDebugUtilsMessengerCreateInfoEXT db_info = debug_make_msgr_info(NULL);
+#endif
+
     VkApplicationInfo app_info = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = NULL,
@@ -36,7 +41,11 @@ VkInstance inst_create(void) {
     };
     VkInstanceCreateInfo ic_info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+#ifdef DEBUG
+        .pNext = &db_info,
+#else
         .pNext = NULL,
+#endif
         .flags = 0,
         .pApplicationInfo = &app_info,
         .enabledLayerCount = nlayers,
