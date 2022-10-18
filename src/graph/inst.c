@@ -1,20 +1,23 @@
 #include "graph/inst.h"
 #include "graph/inst/ext.h"
 #include "graph/debug.h"
+#include "graph/ver.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-//
-
-static int check_version(uint32_t *target);
 
 //
 
 VkInstance inst_create(void) {
     VkInstance ret = NULL;
 
-    uint32_t target_ver;
-    if (check_version(&target_ver)) goto out_retn;
+    uint32_t ver;
+    VkResult r = vkEnumerateInstanceVersion(&ver);
+    if (r != VK_SUCCESS) {
+        fprintf(stderr, "Can't vkEnumerateInstanceVersion: ");
+        vulk_err_str(stderr, r);
+        goto out_retn;
+    }
+    if (check_version(ver)) goto out_retn;
 
     uint32_t nlayers;
     const char **layers;
@@ -37,7 +40,7 @@ VkInstance inst_create(void) {
             VK_MAKE_API_VERSION(0, APPVMAJOR, APPVMINOR, APPVPATCH),
         .pEngineName = NULL,
         .engineVersion = 0,
-        .apiVersion = target_ver,
+        .apiVersion = TARGET_VULK_VER,
     };
     VkInstanceCreateInfo ic_info = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -54,7 +57,7 @@ VkInstance inst_create(void) {
         .ppEnabledExtensionNames = exts,
     };
     VkInstance inst;
-    VkResult r = vkCreateInstance(&ic_info, NULL, &inst);
+    r = vkCreateInstance(&ic_info, NULL, &inst);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkCreateInstance: ");
         vulk_err_str(stderr, r);
@@ -72,18 +75,4 @@ out_retn:
 
 void inst_destroy(VkInstance *inst) {
     vkDestroyInstance(*inst, NULL); *inst = NULL;
-}
-
-int check_version(uint32_t *target) {
-    uint32_t ver;
-    vkEnumerateInstanceVersion(&ver);
-    *target = VK_API_VERSION_1_3;
-    if (VK_API_VERSION_MAJOR(ver) != VK_API_VERSION_MAJOR(*target) ||
-            VK_API_VERSION_MINOR(ver) < VK_API_VERSION_MINOR(*target) ||
-            VK_API_VERSION_VARIANT(ver) != VK_API_VERSION_VARIANT(*target)) {
-        fprintf(stderr, "Unsupported Vulkan version. "APPNAME" targets Vulkan %d.%d\n",
-                VK_API_VERSION_MAJOR(*target), VK_API_VERSION_MINOR(*target));
-        return 1;
-    }
-    return 0;
 }
