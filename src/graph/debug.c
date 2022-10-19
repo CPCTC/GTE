@@ -54,7 +54,7 @@ VkBool32 msg_callback(
         void *null) {
     (void) null;
     fprintf(stderr, "%s %s: ", type_str(type), sev_str(sev));
-    fprintf(stderr, "ID %d (%s): ", data->messageIdNumber, data->pMessageIdName);
+    fprintf(stderr, "ID 0x%x (%s): ", data->messageIdNumber, data->pMessageIdName);
     fprintf(stderr, "\t%s\n", data->pMessage);
     return VK_FALSE;
 }
