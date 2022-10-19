@@ -1,5 +1,6 @@
 #include "graph.h"
 #include "graph/debug.h"
+#include "graph/dev.h"
 #include "graph/inst.h"
 #include "graph/win.h"
 #include <stdlib.h>
@@ -11,6 +12,7 @@ typedef struct {
     GLFWwindow *win;
     VkInstance inst;
     VkDebugUtilsMessengerEXT msgr;
+    VkDevice dev;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -28,10 +30,15 @@ GRAPH graph_init(void) {
     if (!g->msgr) goto err_free_inst;
 #endif
 
+    g->dev = dev_init(g->inst);
+    if (!g->dev) goto err_stop_debug;
+
     // ...
     return g;
 
+err_stop_debug:
 #ifdef DEBUG
+    debug_stop(g->inst, &g->msgr);
 err_free_inst:
 #endif
     inst_destroy(&g->inst);
@@ -60,6 +67,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    dev_destroy(&g->dev);
 #ifdef DEBUG
     debug_stop(g->inst, &g->msgr);
 #endif
