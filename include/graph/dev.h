@@ -2,5 +2,11 @@
 
 #include "graph/glfw.h"
 
-VkDevice dev_init(VkInstance inst);
-void dev_destroy(VkDevice *dev);
+typedef enum {
+    GRAPHICS_Q = 0,
+    MAX_Q, // *cheering*
+} Queue_name;
+typedef VkQueue Queues[MAX_Q];
+
+VkDevice dev_init(VkInstance inst, Queues queues);
+void dev_destroy(VkDevice *dev, Queues queues);

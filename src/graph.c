@@ -13,6 +13,7 @@ typedef struct {
     VkInstance inst;
     VkDebugUtilsMessengerEXT msgr;
     VkDevice dev;
+    Queues qs;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -30,7 +31,7 @@ GRAPH graph_init(void) {
     if (!g->msgr) goto err_free_inst;
 #endif
 
-    g->dev = dev_init(g->inst);
+    g->dev = dev_init(g->inst, g->qs);
     if (!g->dev) goto err_stop_debug;
 
     // ...
@@ -67,7 +68,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
-    dev_destroy(&g->dev);
+    dev_destroy(&g->dev, g->qs);
 #ifdef DEBUG
     debug_stop(g->inst, &g->msgr);
 #endif

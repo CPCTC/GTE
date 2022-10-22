@@ -1,4 +1,5 @@
-#include "graph/dev/exts.h"
+#include "graph/dev/pdev.h"
+#include "graph/dev/q.h"
 #include "graph/ver.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -7,11 +8,11 @@
 //
 
 static int pdev_glance(VkInstance inst);
-static uint32_t rate_group(VkPhysicalDeviceGroupProperties grp);
+static uint32_t rate_group(VkPhysicalDeviceGroupProperties grp, Queue_infos *qs);
 
 //
 
-int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties **grps) {
+int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties **grps, Queue_infos *qs) {
     if (pdev_glance(inst)) goto err_retn;
     uint32_t ngrps;
     VkResult r = vkEnumeratePhysicalDeviceGroups(inst, &ngrps, NULL);
@@ -39,15 +40,17 @@ int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties 
     uint32_t best_grp = 0;
     uint32_t best_score = 0;
     for (uint32_t i = 0; i < ngrps; i++) {
-        uint32_t score = rate_group((*grps)[i]);
+        Queue_infos grp_qs;
+        uint32_t score = rate_group((*grps)[i], &grp_qs);
         if (score > best_score) {
             best_grp = i;
             best_score = score;
+	    *qs = grp_qs;
         }
     }
 
     if (!best_score) {
-        fprintf(stderr, "No suitable Vulkan device group found.\n");
+        fprintf(stderr, "No suitable Vulkan device found.\n");
         goto err_free_groups;
     }
 
@@ -94,7 +97,7 @@ out_retn:
     return ret;
 }
 
-uint32_t rate_group(VkPhysicalDeviceGroupProperties grp) {
+uint32_t rate_group(VkPhysicalDeviceGroupProperties grp, Queue_infos *qs) {
     uint32_t score = 1;
     VkPhysicalDeviceProperties2 props2 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
@@ -102,6 +105,7 @@ uint32_t rate_group(VkPhysicalDeviceGroupProperties grp) {
     };
     vkGetPhysicalDeviceProperties2(grp.physicalDevices[0], &props2);
     VkPhysicalDeviceProperties props = props2.properties;
+
     if (check_version(props.apiVersion)) return 0;
     switch (props.deviceType) {
         default:
@@ -118,5 +122,6 @@ uint32_t rate_group(VkPhysicalDeviceGroupProperties grp) {
             break;
     }
     score *= grp.physicalDeviceCount;
+    if (create_queues(grp.physicalDevices[0], qs)) return 0;
     return score;
 }
