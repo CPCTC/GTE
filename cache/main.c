@@ -1,9 +1,22 @@
 #define BUFF_DATA_CAP
 #include "buff.h"
 #include <libcpuid/libcpuid.h>
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
-int main(void) {
+int main(int argc, char **argv) {
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage %s <outfile>\n", argv[0]);
+        return 1;
+    }
+    FILE *out = fopen(argv[1], "w");
+    if (!out) {
+        fprintf(stderr, "Can't open file %s: %s\n", argv[1], strerror(errno));
+        return 1;
+    }
+
     struct cpu_id_t id;
     if (cpu_identify(NULL, &id)) {
         fprintf(stderr, "Can't id cpu: %s\n", cpuid_error());
@@ -19,13 +32,14 @@ int main(void) {
     int32_t header = sizeof (struct buff_node);
     int32_t data = chunk - header;
 
-    fprintf(stderr,
+    printf(
             "L2 cache line:    %d bytes\n"
             "data chunk:       %d bytes\n"
             "buff_node header: %d bytes\n"
             "buff_node data:   %d bytes\n",
             id.l2_cacheline, chunk, header, data);
 
-    printf("%d\n", data);
+    fprintf(out, "%d\n", data);
+    fclose(out);
     return 0;
 }
