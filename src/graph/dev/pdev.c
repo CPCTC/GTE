@@ -8,7 +8,7 @@
 //
 
 static int pdev_glance(VkInstance inst);
-static uint32_t rate_group(VkPhysicalDeviceGroupProperties grp, Queue_infos *qs);
+static uint32_t rate_group(VkInstance inst, VkPhysicalDeviceGroupProperties grp, Queue_infos *qs);
 
 //
 
@@ -41,7 +41,7 @@ int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties 
     uint32_t best_score = 0;
     for (uint32_t i = 0; i < ngrps; i++) {
         Queue_infos grp_qs;
-        uint32_t score = rate_group((*grps)[i], &grp_qs);
+        uint32_t score = rate_group(inst, (*grps)[i], &grp_qs);
         if (score > best_score) {
             best_grp = i;
             best_score = score;
@@ -97,7 +97,7 @@ out_retn:
     return ret;
 }
 
-uint32_t rate_group(VkPhysicalDeviceGroupProperties grp, Queue_infos *qs) {
+uint32_t rate_group(VkInstance inst, VkPhysicalDeviceGroupProperties grp, Queue_infos *qs) {
     uint32_t score = 1;
     VkPhysicalDeviceProperties2 props2 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
@@ -122,6 +122,6 @@ uint32_t rate_group(VkPhysicalDeviceGroupProperties grp, Queue_infos *qs) {
             break;
     }
     score *= grp.physicalDeviceCount;
-    if (create_queues(grp.physicalDevices[0], qs)) return 0;
+    if (create_queues(inst, grp.physicalDevices[0], qs)) return 0;
     return score;
 }

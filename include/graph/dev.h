@@ -4,6 +4,7 @@
 
 typedef enum {
     GRAPHICS_Q = 0,
+    PRESENT_Q,
     MAX_Q, // *cheering*
 } Queue_name;
 typedef VkQueue Queues[MAX_Q];
