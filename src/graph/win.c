@@ -31,6 +31,23 @@ void win_close(GLFWwindow **w) {
     glfwTerminate();
 }
 
+VkSurfaceKHR srf_init(VkInstance inst, GLFWwindow *win) {
+    VkSurfaceKHR srf;
+    VkResult r = glfwCreateWindowSurface(inst, win, NULL, &srf);
+    if (r != VK_SUCCESS) {
+        fprintf(stderr, "Can't glfwCreateWindowSurface: %s (", glfw_err_str());
+        vulk_err_str(stderr, r);
+        fprintf(stderr, ")\n");
+        return NULL;
+    }
+    return srf;
+}
+
+void srf_destroy(VkInstance inst, VkSurfaceKHR *srf) {
+    vkDestroySurfaceKHR(inst, *srf, NULL);
+    *srf = NULL;
+}
+
 int default_win_size(int *w, int *h) {
     GLFWmonitor *m = glfwGetPrimaryMonitor();
     if (!m) {

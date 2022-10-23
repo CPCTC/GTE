@@ -12,6 +12,7 @@ typedef struct {
     GLFWwindow *win;
     VkInstance inst;
     VkDebugUtilsMessengerEXT msgr;
+    VkSurfaceKHR srf;
     VkDevice dev;
     Queues qs;
 } Graph;
@@ -31,12 +32,17 @@ GRAPH graph_init(void) {
     if (!g->msgr) goto err_free_inst;
 #endif
 
+    g->srf = srf_init(g->inst, g->win);
+    if (!g->srf) goto err_stop_debug;
+
     g->dev = dev_init(g->inst, g->qs);
-    if (!g->dev) goto err_stop_debug;
+    if (!g->dev) goto err_free_srf;
 
     // ...
     return g;
 
+err_free_srf:
+    srf_destroy(g->inst, &g->srf);
 err_stop_debug:
 #ifdef DEBUG
     debug_stop(g->inst, &g->msgr);
@@ -69,6 +75,7 @@ int mainloop(GRAPH hg) {
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
     dev_destroy(&g->dev, g->qs);
+    srf_destroy(g->inst, &g->srf);
 #ifdef DEBUG
     debug_stop(g->inst, &g->msgr);
 #endif
