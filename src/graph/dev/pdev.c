@@ -18,7 +18,7 @@ int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties 
     VkResult r = vkEnumeratePhysicalDeviceGroups(inst, &ngrps, NULL);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumeratePhysicalDeviceGroups: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto err_retn;
     }
     *grps = malloc(ngrps * sizeof (VkPhysicalDeviceGroupProperties));
@@ -33,7 +33,7 @@ int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties 
     r = vkEnumeratePhysicalDeviceGroups(inst, &ngrps, *grps);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumeratePhysicalDeviceGroups: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto err_free_groups;
     }
 
@@ -72,7 +72,7 @@ int pdev_glance(VkInstance inst) {
     VkResult r = vkEnumeratePhysicalDevices(inst, &ndevs, NULL);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumeratePhysicalDevices: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_retn;
     }
     VkPhysicalDevice *devs = malloc(ndevs * sizeof (VkPhysicalDevice));
@@ -83,7 +83,7 @@ int pdev_glance(VkInstance inst) {
     r = vkEnumeratePhysicalDevices(inst, &ndevs, devs);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumeratePhysicalDevices: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_free_devs;
     }
 

@@ -19,7 +19,7 @@ VkDebugUtilsMessengerEXT debug_start(VkInstance inst) {
     VkResult r = fpi(inst,vkCreateDebugUtilsMessengerEXT)(inst, &info, NULL, &ret);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkCreateDebugUtilsMessengerEXT: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         return NULL;
     }
     return ret;

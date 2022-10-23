@@ -34,7 +34,7 @@ VkDevice dev_init(VkInstance inst, Queues queues) {
     VkResult r = vkCreateDevice(grps[grp].physicalDevices[0], &dc_info, NULL, &dev);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkCreateDevice: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
 	    goto out_free;
     }
     for (uint32_t i = 0; i < MAX_Q; i++) {

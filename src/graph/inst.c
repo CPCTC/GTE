@@ -14,7 +14,7 @@ VkInstance inst_create(void) {
     VkResult r = vkEnumerateInstanceVersion(&ver);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumerateInstanceVersion: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_retn;
     }
     if (check_version(ver)) goto out_retn;
@@ -60,7 +60,7 @@ VkInstance inst_create(void) {
     r = vkCreateInstance(&ic_info, NULL, &inst);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkCreateInstance: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_free_exts;
     }
     ret = inst;

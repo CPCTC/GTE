@@ -51,7 +51,7 @@ int check_layers(uint32_t nlayers, const char * const *layers) {
     VkResult r = vkEnumerateInstanceLayerProperties(&nprops, NULL);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumerateInstanceLayerProperties: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_retn;
     }
     VkLayerProperties *props = malloc(nprops * sizeof (VkLayerProperties));
@@ -62,7 +62,7 @@ int check_layers(uint32_t nlayers, const char * const *layers) {
     r = vkEnumerateInstanceLayerProperties(&nprops, props);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumerateInstanceLayerProperties: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_free_props;
     }
 
@@ -137,7 +137,7 @@ int check_exts(uint32_t nexts, const char * const *exts) {
     VkResult r = vkEnumerateInstanceExtensionProperties(NULL, &nprops, NULL);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumerateInstanceExtensionProperties: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_retn;
     }
     VkExtensionProperties *props = malloc(nprops * sizeof (VkExtensionProperties));
@@ -148,7 +148,7 @@ int check_exts(uint32_t nexts, const char * const *exts) {
     r = vkEnumerateInstanceExtensionProperties(NULL, &nprops, props);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkEnumerateInstanceExtensionProperties: ");
-        vulk_err_str(stderr, r);
+        vulk_err(stderr, r);
         goto out_free_props;
     }
 

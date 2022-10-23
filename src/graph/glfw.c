@@ -8,6 +8,11 @@ const char *glfw_err_str(void) {
 
 #define cse(x) case x: err = #x; break;
 
+void vulk_err(FILE *stream, VkResult r) {
+    vulk_err_str(stream, r);
+    fprintf(stream, "\n");
+}
+
 void vulk_err_str(FILE *stream, VkResult r) {
     const char *err;
     switch (r) {
@@ -36,8 +41,8 @@ void vulk_err_str(FILE *stream, VkResult r) {
         cse(VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS);
         cse(VK_PIPELINE_COMPILE_REQUIRED);
         default:
-            fprintf(stream, "error %d\n", r);
+            fprintf(stream, "error %d", r);
             return;
     }
-    fprintf(stream, "%s\n", err);
+    fprintf(stream, "%s", err);
 }
