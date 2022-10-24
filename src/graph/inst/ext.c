@@ -1,6 +1,6 @@
 #include "graph/inst/ext.h"
-#include "graph/inst/nameset.h"
 #include "graph/glfw.h"
+#include "graph/nameset.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>

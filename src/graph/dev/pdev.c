@@ -1,3 +1,4 @@
+#include "graph/dev/ext.h"
 #include "graph/dev/pdev.h"
 #include "graph/dev/q.h"
 #include "graph/ver.h"
@@ -98,7 +99,6 @@ out_retn:
 }
 
 uint32_t rate_group(VkInstance inst, VkPhysicalDeviceGroupProperties grp, Queue_infos *qs) {
-    uint32_t score = 1;
     VkPhysicalDeviceProperties2 props2 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
         .pNext = NULL,
@@ -107,6 +107,10 @@ uint32_t rate_group(VkInstance inst, VkPhysicalDeviceGroupProperties grp, Queue_
     VkPhysicalDeviceProperties props = props2.properties;
 
     if (check_version(props.apiVersion)) return 0;
+    if (check_dev_exts(grp.physicalDevices[0], NDEV_EXTENSIONS, DEV_EXTENSIONS)) return 0;
+    if (create_queues(inst, grp.physicalDevices[0], qs)) return 0;
+
+    uint32_t score = 1;
     switch (props.deviceType) {
         default:
         case VK_PHYSICAL_DEVICE_TYPE_OTHER:
@@ -122,6 +126,6 @@ uint32_t rate_group(VkInstance inst, VkPhysicalDeviceGroupProperties grp, Queue_
             break;
     }
     score *= grp.physicalDeviceCount;
-    if (create_queues(inst, grp.physicalDevices[0], qs)) return 0;
+
     return score;
 }

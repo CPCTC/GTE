@@ -1,4 +1,5 @@
 #include "graph/dev.h"
+#include "graph/dev/ext.h"
 #include "graph/dev/pdev.h"
 #include <stdlib.h>
 
@@ -25,8 +26,8 @@ VkDevice dev_init(VkInstance inst, Queues queues) {
         .pQueueCreateInfos = q_infos.creates,
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = NULL,
-        .enabledExtensionCount = 0,
-        .ppEnabledExtensionNames = NULL,
+        .enabledExtensionCount = NDEV_EXTENSIONS,
+        .ppEnabledExtensionNames = DEV_EXTENSIONS,
         .pEnabledFeatures = NULL,
     };
 

@@ -1,5 +1,5 @@
 #define HASH_IMPLEMENTATION
-#include "graph/inst/nameset.h"
+#include "graph/nameset.h"
 #include <string.h>
 #include <xxhash.h>
 
