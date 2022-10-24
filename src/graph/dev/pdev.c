@@ -106,7 +106,11 @@ uint32_t rate_group(VkInstance inst, VkPhysicalDeviceGroupProperties grp, Queue_
     vkGetPhysicalDeviceProperties2(grp.physicalDevices[0], &props2);
     VkPhysicalDeviceProperties props = props2.properties;
 
-    if (check_version(props.apiVersion)) return 0;
+    if (check_version(props.apiVersion)) {
+        fprintf(stderr, "Device %s: ", props.deviceName);
+        version_warning(stderr, props.apiVersion);
+        return 0;
+    }
     if (check_dev_exts(grp.physicalDevices[0], NDEV_EXTENSIONS, DEV_EXTENSIONS)) return 0;
     if (create_queues(inst, grp.physicalDevices[0], qs)) return 0;
 

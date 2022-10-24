@@ -17,7 +17,10 @@ VkInstance inst_create(void) {
         vulk_err(stderr, r);
         goto out_retn;
     }
-    if (check_version(ver)) goto out_retn;
+    if (check_version(ver)) {
+        version_warning(stderr, ver);
+        goto out_retn;
+    }
 
     uint32_t nlayers;
     const char **layers;

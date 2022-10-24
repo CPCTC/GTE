@@ -38,6 +38,9 @@ int create_queues(VkInstance inst, VkPhysicalDevice pdev, Queue_infos *q_infos) 
                     if (++nq_flags == MAX_Q) goto end;
                 }
     free(fams);
+    VkPhysicalDeviceProperties prop;
+    vkGetPhysicalDeviceProperties(pdev, &prop);
+    fprintf(stderr, "Device %s: Not enough queues.\n", prop.deviceName);
     return 1;
 end:
     free(fams);
