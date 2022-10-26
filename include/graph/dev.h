@@ -9,5 +9,5 @@ typedef enum {
 } Queue_name;
 typedef VkQueue Queues[MAX_Q];
 
-VkDevice dev_init(VkInstance inst, Queues queues);
+VkDevice dev_init(VkInstance inst, VkSurfaceKHR srf, Queues queues);
 void dev_destroy(VkDevice *dev, Queues queues);

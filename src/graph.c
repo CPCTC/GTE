@@ -35,7 +35,7 @@ GRAPH graph_init(void) {
     g->srf = srf_init(g->inst, g->win);
     if (!g->srf) goto err_stop_debug;
 
-    g->dev = dev_init(g->inst, g->qs);
+    g->dev = dev_init(g->inst, g->srf, g->qs);
     if (!g->dev) goto err_free_srf;
 
     // ...

@@ -3,13 +3,13 @@
 #include "graph/dev/pdev.h"
 #include <stdlib.h>
 
-VkDevice dev_init(VkInstance inst, Queues queues) {
+VkDevice dev_init(VkInstance inst, VkSurfaceKHR srf, Queues queues) {
     VkDevice ret = NULL;
 
     uint32_t grp;
     VkPhysicalDeviceGroupProperties *grps;
     Queue_infos q_infos;
-    if (select_pdev(inst, &grp, &grps, &q_infos)) goto out_retn;
+    if (select_pdev(inst, srf, &grp, &grps, &q_infos)) goto out_retn;
 
     VkDeviceGroupDeviceCreateInfo grp_info = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO,

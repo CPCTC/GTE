@@ -7,13 +7,14 @@
 //
 
 static const float QUEUE_PRI = 1.0f;
-static bool is_queue(Queue_name queue,
-        VkInstance inst, VkPhysicalDevice pdev,
-        VkQueueFamilyProperties* fams, uint32_t fam);
+int is_queue(Queue_name queue, VkPhysicalDevice pdev,
+        VkQueueFamilyProperties* fams, uint32_t fam,
+        VkSurfaceKHR srf,
+        bool *ret);
 
 //
 
-int create_queues(VkInstance inst, VkPhysicalDevice pdev, Queue_infos *q_infos) {
+int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos) {
     uint32_t nfams;
     vkGetPhysicalDeviceQueueFamilyProperties(pdev, &nfams, NULL);
     VkQueueFamilyProperties *fams = malloc(nfams * sizeof (VkQueueFamilyProperties));
@@ -30,13 +31,19 @@ int create_queues(VkInstance inst, VkPhysicalDevice pdev, Queue_infos *q_infos) 
 
     for (uint32_t fam = 0; fam < nfams; fam++)
         for (Queue_name q = 0; q < MAX_Q; q++)
-            if (!(q_flags & 1 << q))
-                if (is_queue(q, inst, pdev, fams, fam)) {
+            if (!(q_flags & 1 << q)) {
+                bool is_q;
+                if (is_queue(q, pdev, fams, fam, srf, &is_q)) {
+                    free(fams);
+                    return 1;
+                }
+                if (is_q) {
                     q_flags |= 1 << q;
                     q_infos->fams[q] = fam;
                     create_fam_flags |= 1 << fam;
                     if (++nq_flags == MAX_Q) goto end;
                 }
+            }
     free(fams);
     VkPhysicalDeviceProperties prop;
     vkGetPhysicalDeviceProperties(pdev, &prop);
@@ -65,18 +72,29 @@ end:
     return 0;
 }
 
-bool is_queue(Queue_name queue,
-        VkInstance inst, VkPhysicalDevice pdev,
-        VkQueueFamilyProperties* fams, uint32_t fam) {
+int is_queue(Queue_name queue, VkPhysicalDevice pdev,
+        VkQueueFamilyProperties* fams, uint32_t fam,
+        VkSurfaceKHR srf,
+        bool *ret) {
     switch (queue) {
         case (GRAPHICS_Q):
-            return fams[fam].queueFlags & VK_QUEUE_GRAPHICS_BIT;
+            *ret = fams[fam].queueFlags & VK_QUEUE_GRAPHICS_BIT;
+            break;
         case (PRESENT_Q):
-            return glfwGetPhysicalDevicePresentationSupport(inst, pdev, fam) == GLFW_TRUE;
+            {
+                VkBool32 vkret;
+                VkResult r = vkGetPhysicalDeviceSurfaceSupportKHR(pdev, fam, srf, &vkret);
+                if (r != VK_SUCCESS) {
+                    fprintf(stderr, "Can't vkGetPhysicalDeviceSurfaceSupportKHR: ");
+                    vulk_err(stderr, r);
+                    return 1;
+                }
+                *ret = vkret == VK_TRUE;
+            }
+            break;
         case (MAX_Q):
-            return 0;
+            *ret = 0;
+            break;
     }
-
-    // unreachable
-    return *(bool *)NULL;
+    return 0;
 }

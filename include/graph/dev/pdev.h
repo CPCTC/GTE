@@ -9,4 +9,5 @@ typedef struct {
 	uint32_t fams[MAX_Q];
 } Queue_infos;
 
-int select_pdev(VkInstance inst, uint32_t *grp, VkPhysicalDeviceGroupProperties **grps, Queue_infos *qs);
+int select_pdev(VkInstance inst, VkSurfaceKHR srf,
+        uint32_t *grp, VkPhysicalDeviceGroupProperties **grps, Queue_infos *qs);
