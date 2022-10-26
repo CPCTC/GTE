@@ -14,7 +14,7 @@ int is_queue(Queue_name queue, VkPhysicalDevice pdev,
 
 //
 
-int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos) {
+int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos, bool *works) {
     uint32_t nfams;
     vkGetPhysicalDeviceQueueFamilyProperties(pdev, &nfams, NULL);
     VkQueueFamilyProperties *fams = malloc(nfams * sizeof (VkQueueFamilyProperties));
@@ -48,7 +48,8 @@ int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos)
     VkPhysicalDeviceProperties prop;
     vkGetPhysicalDeviceProperties(pdev, &prop);
     fprintf(stderr, "Device %s: Not enough queues.\n", prop.deviceName);
-    return 1;
+    *works = 0;
+    return 0;
 end:
     free(fams);
 
@@ -69,6 +70,7 @@ end:
         create_fam_flags >>= 1;
     }
 
+    *works = 1;
     return 0;
 }
 

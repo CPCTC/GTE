@@ -6,7 +6,7 @@
 
 //
 
-int check_dev_exts(VkPhysicalDevice pdev, uint32_t nexts, const char * const *exts) {
+int check_dev_exts(VkPhysicalDevice pdev, uint32_t nexts, const char * const *exts, bool *works) {
     int ret = 1;
 
     uint32_t nprops;
@@ -43,14 +43,13 @@ int check_dev_exts(VkPhysicalDevice pdev, uint32_t nexts, const char * const *ex
     VkPhysicalDeviceProperties pdevprop;
     vkGetPhysicalDeviceProperties(pdev, &pdevprop);
 
-    bool err = 0;
+    ret = 0;
+    *works = 1;
     for (uint32_t i = 0; i < nexts; i++)
         if (nameset_get(set, exts[i], NULL)) {
             fprintf(stderr, "Device %s: Unsupported extension %s\n", pdevprop.deviceName, exts[i]);
-	    err = 1;
+            *works = 0;
         }
-    if (err) goto out_free_nameset;
-    ret = 0;
 
 out_free_nameset:
     nameset_free(&set);
