@@ -1,13 +1,7 @@
 #pragma once
 
 #include "graph/glfw.h"
+#include "graph/pdev.h"
 
-typedef enum {
-    GRAPHICS_Q = 0,
-    PRESENT_Q,
-    MAX_Q, // *cheering*
-} Queue_name;
-typedef VkQueue Queues[MAX_Q];
-
-VkDevice dev_init(VkInstance inst, VkSurfaceKHR srf, Queues queues);
+VkDevice dev_init(VkPhysicalDevice pdev, Queue_infos q_infos, Queues queues);
 void dev_destroy(VkDevice *dev, Queues queues);

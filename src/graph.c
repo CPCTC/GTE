@@ -2,6 +2,7 @@
 #include "graph/debug.h"
 #include "graph/dev.h"
 #include "graph/inst.h"
+#include "graph/pdev.h"
 #include "graph/win.h"
 #include <stdlib.h>
 
@@ -13,6 +14,8 @@ typedef struct {
     VkInstance inst;
     VkDebugUtilsMessengerEXT msgr;
     VkSurfaceKHR srf;
+    VkPhysicalDevice pdev;
+    Queue_infos q_infos;
     VkDevice dev;
     Queues qs;
 } Graph;
@@ -35,7 +38,10 @@ GRAPH graph_init(void) {
     g->srf = srf_init(g->inst, g->win);
     if (!g->srf) goto err_stop_debug;
 
-    g->dev = dev_init(g->inst, g->srf, g->qs);
+    g->pdev = select_pdev(g->inst, g->srf, &g->q_infos);
+    if (!g->pdev) goto err_free_srf;
+
+    g->dev = dev_init(g->pdev, g->q_infos, g->qs);
     if (!g->dev) goto err_free_srf;
 
     // ...

@@ -1,16 +1,8 @@
-#include "graph/dev/ext.h"
+#include "graph/pdev/ext.h"
 #include "graph/nameset.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-
-//
-
-static const char * const exts[] = {
-    "VK_KHR_swapchain",
-};
-const char * const * const DEV_EXTENSIONS = exts;
-const uint32_t NDEV_EXTENSIONS = sizeof (exts) / sizeof (exts[0]);
 
 //
 

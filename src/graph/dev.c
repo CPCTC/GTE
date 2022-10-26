@@ -1,26 +1,11 @@
 #include "graph/dev.h"
-#include "graph/dev/ext.h"
-#include "graph/dev/pdev.h"
+#include "graph/dev_ext.h"
 #include <stdlib.h>
 
-VkDevice dev_init(VkInstance inst, VkSurfaceKHR srf, Queues queues) {
-    VkDevice ret = NULL;
-
-    uint32_t grp;
-    VkPhysicalDeviceGroupProperties *grps;
-    Queue_infos q_infos;
-    if (select_pdev(inst, srf, &grp, &grps, &q_infos)) goto out_retn;
-
-    VkDeviceGroupDeviceCreateInfo grp_info = {
-        .sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO,
-        .pNext = NULL,
-        .physicalDeviceCount = grps[grp].physicalDeviceCount,
-        .pPhysicalDevices = grps[grp].physicalDevices,
-    };
-
+VkDevice dev_init(VkPhysicalDevice pdev, Queue_infos q_infos, Queues queues) {
     VkDeviceCreateInfo dc_info = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &grp_info,
+        .pNext = NULL,
         .flags = 0,
         .queueCreateInfoCount = q_infos.ncreates,
         .pQueueCreateInfos = q_infos.creates,
@@ -32,21 +17,16 @@ VkDevice dev_init(VkInstance inst, VkSurfaceKHR srf, Queues queues) {
     };
 
     VkDevice dev;
-    VkResult r = vkCreateDevice(grps[grp].physicalDevices[0], &dc_info, NULL, &dev);
+    VkResult r = vkCreateDevice(pdev, &dc_info, NULL, &dev);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkCreateDevice: ");
         vulk_err(stderr, r);
-	    goto out_free;
+        return NULL;
     }
-    for (uint32_t i = 0; i < MAX_Q; i++) {
+    for (Queue_name i = 0; i < MAX_Q; i++) {
         vkGetDeviceQueue(dev, q_infos.fams[i], 0, queues + i);
     }
-    ret = dev;
-
-out_free:
-    free(grps); grps = NULL;
-out_retn:
-    return ret;
+    return dev;
 }
 
 void dev_destroy(VkDevice *dev, Queues queues) {
