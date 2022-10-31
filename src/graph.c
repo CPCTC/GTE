@@ -1,6 +1,7 @@
 #include "graph.h"
 #include "graph/debug.h"
 #include "graph/dev.h"
+#include "graph/img.h"
 #include "graph/inst.h"
 #include "graph/pdev.h"
 #include "graph/sch.h"
@@ -20,6 +21,8 @@ typedef struct {
     VkDevice dev;
     Queues qs;
     VkSwapchainKHR sch;
+    Surface_info srf_info;
+    Images imgs;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -46,12 +49,17 @@ GRAPH graph_init(void) {
     g->dev = dev_init(g->pdev, g->q_infos, g->qs);
     if (!g->dev) goto err_free_srf;
 
-    if (sch_init(g->dev, g->pdev, g->srf, &g->sch))
+    if (sch_init(g->dev, g->pdev, g->srf, &g->sch, &g->srf_info))
         goto err_free_dev;
+
+    if (img_init(g->dev, g->sch, g->srf_info, &g->imgs))
+        goto err_free_sch;
 
     // ...
     return g;
 
+err_free_sch:
+    sch_destroy(g->dev, &g->sch);
 err_free_dev:
     dev_destroy(&g->dev, g->qs);
 err_free_srf:
@@ -87,6 +95,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    img_destroy(g->dev, &g->imgs);
     sch_destroy(g->dev, &g->sch);
     dev_destroy(&g->dev, g->qs);
     srf_destroy(g->inst, &g->srf);

@@ -5,16 +5,6 @@
 
 //
 
-typedef struct {
-    uint32_t nimages;
-    VkSurfaceFormatKHR fmt;
-    VkExtent2D extent;
-    VkSurfaceTransformFlagBitsKHR xform;
-    VkPresentModeKHR prmode;
-} Surface_info;
-
-//
-
 static int check_srf(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
 static int check_srf_caps(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
 static int check_srf_fmts(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
@@ -24,29 +14,29 @@ static VkExtent2D clamp_2D(VkExtent2D low, VkExtent2D x, VkExtent2D high);
 
 //
 
-Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf, VkSwapchainKHR *sch) {
-    Surface_info srfinfo = {0};
-    if (check_srf(pdev, srf, &srfinfo))
+Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,
+        VkSwapchainKHR *sch, Surface_info *srfinfo) {
+    if (check_srf(pdev, srf, srfinfo))
         return SCH_FAIL;
-    if (srfinfo.extent.width == 0 || srfinfo.extent.height == 0)
+    if (srfinfo->extent.width == 0 || srfinfo->extent.height == 0)
         return SCH_AGAIN;
     VkSwapchainCreateInfoKHR info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
         .flags = 0,
         .surface = srf,
-        .minImageCount = srfinfo.nimages,
-        .imageFormat = srfinfo.fmt.format,
-        .imageColorSpace = srfinfo.fmt.colorSpace,
-        .imageExtent = srfinfo.extent,
+        .minImageCount = srfinfo->nimages,
+        .imageFormat = srfinfo->fmt.format,
+        .imageColorSpace = srfinfo->fmt.colorSpace,
+        .imageExtent = srfinfo->extent,
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
         .pQueueFamilyIndices = NULL,
-        .preTransform = srfinfo.xform,
+        .preTransform = srfinfo->xform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = srfinfo.prmode,
+        .presentMode = srfinfo->prmode,
         .clipped = VK_TRUE,
         .oldSwapchain = NULL,
     };
