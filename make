@@ -16,33 +16,76 @@ link_flags="$(pkg-config --libs glfw3 vulkan libxxhash)"
 max_threads=4
 
 build_dir=.build
-src_dir=src.conf
+src_dir=src
+
+declare -A cmds
+cmds[gen_size]="gen_size;"
+gen_size () {
+    (
+        unset objs
+        name=cache-line-size
+        link_flags+=" -lcpuid"
+        build_dir="cache/$build_dir"
+        src_dir=cache
+        unset 'cmds[gen_size]'
+        main
+
+        $build_dir/cache-line-size cache/.build/size
+    )
+    compile_flags+=" -DBUFF_DATA_CAP=$(cat cache/.build/size)"
+}
+
+#
+# End Config
+#
 
 set -e
 shopt -s nullglob
 cd "$(dirname "$0")"
 
-step () (
+step=pretty_step
+pretty_step () {
+    if [[ -v in ]]; then
+        echo "CC $in"
+    else
+        echo "LD"
+    fi
+    "$@"
+}
+dbg_step () {
     echo "$@"
     "$@"
-)
+}
+
+compiler=default_compiler
+default_compiler () {
+    submit $step $cc $flags -c $compile_flags -o "$out.o" "$in"
+    objs[${#objs[@]}]="$out.o"
+}
 
 compile () {
     local in="$1"; shift
 
     if [[ -d $in ]]; then
         for file in "$in"/*; do
-            if [[ ! -f $file.conf ]]; then
-                compile "$file"
+            if [[ $file != */conf && ! -f $file.conf ]]; then
+                if [[ -f $file/conf ]]; then
+                    compile "$file/conf"
+                else
+                    compile "$file"
+                fi
             fi
         done
-    elif [[ $in == *.conf ]]; then
-        . "$in"
     else
-        local out="$build_dir/$in.o"
-        step mkdir -p "$(dirname "$out")"
-        submit step $cc $flags -c $compile_flags -o "$out" "$in"
-        objs[${#objs[@]}]="$out"
+        local out="$build_dir/$in"
+        mkdir -p "$(dirname "$out")"
+        if [[ $in =~ [./]conf$ ]]; then
+            in="$(echo "$in" | sed 's|.conf$||')" \
+                out="$build_dir/$in" \
+                . "$in"
+        else
+            $compiler
+        fi
     fi
 }
 
@@ -65,10 +108,16 @@ waitall () {
 }
 
 main () {
-    step rm -rf $build_dir
-    compile $src_dir
+    eval "$@"
+    eval "${cmds[@]}"
+    rm -rf "$build_dir"
+    if [[ -f "$src_dir/conf" ]]; then
+        compile "$src_dir/conf"
+    else
+        compile "$src_dir"
+    fi
     waitall
-    step $cc $flags -o $build_dir/"$name" "${objs[@]}" $link_flags
+    $step $cc $flags -o "$build_dir/$name" "${objs[@]}" $link_flags
 }
 
-main
+main "$@"
