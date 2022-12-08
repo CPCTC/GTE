@@ -5,6 +5,7 @@
 #include "graph/inst.h"
 #include "graph/pdev.h"
 #include "graph/sch.h"
+#include "graph/shader.h"
 #include "graph/win.h"
 #include <stdlib.h>
 
@@ -23,6 +24,7 @@ typedef struct {
     VkSwapchainKHR sch;
     Surface_info srf_info;
     Images imgs;
+    Shaders shaders;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -55,9 +57,16 @@ GRAPH graph_init(void) {
     if (img_init(g->dev, g->sch, g->srf_info, &g->imgs))
         goto err_free_sch;
 
+    if (shaders_init(g->dev, &g->shaders))
+        goto err_free_img;
+
     // ...
+
+    shaders_destroy(g->dev, &g->shaders);
     return g;
 
+err_free_img:
+    img_destroy(g->dev, &g->imgs);
 err_free_sch:
     sch_destroy(g->dev, &g->sch);
 err_free_dev:

@@ -1,0 +1,81 @@
+compile_shader_task () {
+    glslangValidator --quiet -V -o "$spv" "$in"
+    ld -r -b binary -o "$spv_o" "$spv"
+}
+
+shader_compiler () {
+    local i=${#shaders[@]}
+    shader_stages[$i]=$shader_stage
+    shader_srcs[$i]=$in
+
+    local spv="$build_dir/$in.spv"
+    mkdir -p "$(dirname "$spv")"
+    shaders[$i]=$spv
+
+    local spv_o="$build_dir/$spv.o"
+    mkdir -p "$(dirname "$spv_o")"
+    objs[${#objs[@]}]="$spv_o"
+
+    submit $step compile_shader_task
+}
+
+shader_conf_safe () {
+    sed 's,[^[:alnum:]],_,g'
+}
+
+shader_conf_sym () {
+    echo "_binary_$1" | shader_conf_safe
+}
+
+shader_conf_name () {
+    echo "SHADER_$(realpath -m --relative-to "$in" "$1" | \
+        sed 's,\.[^.]*$,,' | \
+        shader_conf_safe)"
+}
+
+shader_conf_main () {
+    local h="$build_dir/$in-gen/gen/shader.h"
+    local c="$build_dir/$in.c"
+    mkdir -p "$(dirname "$h")"
+    compile_flags+=" -iquote $build_dir/$in-gen/"
+
+    echo '#pragma once' >> "$h"
+    echo '#include "graph/shader/info.h"' >> "$h"
+
+    echo '#include "gen/shader.h"' >> "$c"
+
+    local i
+    for ((i = 0; i < ${#shaders[@]}; i++)); do
+        echo -n 'extern ' >> "$h"
+        echo -n "const uint32_t $(shader_conf_name "${shader_srcs[$i]}")" | \
+            tee -a "$h" >> "$c"
+        echo -n " = $i" >> "$c"
+        echo ';' | tee -a "$h" >> "$c"
+
+        echo "extern char $(shader_conf_sym "${shaders[$i]}")_start[];" >> "$c"
+        echo "extern char $(shader_conf_sym "${shaders[$i]}")_end[];" >> "$c"
+    done
+
+    echo "static Shader_info shaders[${#shaders[@]}] = {" >> "$c"
+    for ((i = 0; i < ${#shaders[@]}; i++)); do
+        echo '    {' >> "$c"
+        echo "        .stage = ${shader_stages[$i]}," >> "$c"
+        echo "        .start = $(shader_conf_sym "${shaders[$i]}")_start," >> "$c"
+        echo "        .end = $(shader_conf_sym "${shaders[$i]}")_end," >> "$c"
+        echo '    },' >> "$c"
+    done
+    echo '};' >> "$c"
+
+    echo -n 'extern ' >> "$h"
+    echo -n 'const Shaders_info SHADER_INFOS' | tee -a "$h" >> "$c"
+    echo ';' >> "$h"
+    echo ' = {' >> "$c"
+    echo "    .nshaders = ${#shaders[@]}," >> "$c"
+    echo '    .shaders = shaders,' >> "$c"
+    echo '};' >> "$c"
+
+    compile "$c"
+}
+
+compile "$in"
+shader_conf_main

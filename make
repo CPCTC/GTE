@@ -17,9 +17,9 @@ max_threads=4
 
 build_dir=.build
 src_dir=src
+shader_dir=shader
 
-declare -A cmds
-cmds[gen_size]="gen_size;"
+cmds[${#cmds[@]}]="gen_size;"
 gen_size () {
     (
         unset objs
@@ -27,12 +27,20 @@ gen_size () {
         link_flags+=" -lcpuid"
         build_dir="cache/$build_dir"
         src_dir=cache
-        unset 'cmds[gen_size]'
+        unset 'cmds'
         main
 
         $build_dir/cache-line-size cache/.build/size
     )
     compile_flags+=" -DBUFF_DATA_CAP=$(cat cache/.build/size)"
+}
+cmds[${#cmds[@]}]="gen_shader;"
+gen_shader () {
+    if [[ -f "$shader_dir/conf" ]]; then
+        compile "$shader_dir/conf"
+    else
+        compile "$shader_dir"
+    fi
 }
 
 #
@@ -108,9 +116,9 @@ waitall () {
 }
 
 main () {
+    rm -rf "$build_dir"
     eval "$@"
     eval "${cmds[@]}"
-    rm -rf "$build_dir"
     if [[ -f "$src_dir/conf" ]]; then
         compile "$src_dir/conf"
     else
