@@ -4,6 +4,7 @@
 #include "graph/img.h"
 #include "graph/inst.h"
 #include "graph/pdev.h"
+#include "graph/pipe/tri.h"
 #include "graph/rpass.h"
 #include "graph/sch.h"
 #include "graph/shader.h"
@@ -27,6 +28,8 @@ typedef struct {
     Images imgs;
     Shaders shaders;
     VkRenderPass rpass;
+    VkPipelineLayout tri_layout;
+    VkPipeline tri_pipe;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -65,11 +68,19 @@ GRAPH graph_init(void) {
     if (rpass_init(g->dev, g->srf_info.fmt.format, &g->rpass))
         goto err_free_shaders;
 
+    if (triangle_pipe_init(g->dev, &g->shaders,
+                g->rpass, 0,
+                g->srf_info.extent,
+                &g->tri_layout, &g->tri_pipe))
+        goto err_free_rpass;
+
     // ...
 
     shaders_destroy(g->dev, &g->shaders);
     return g;
 
+err_free_rpass:
+    rpass_destroy(g->dev, &g->rpass);
 err_free_shaders:
     shaders_destroy(g->dev, &g->shaders);
 err_free_img:
@@ -111,6 +122,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    triangle_pipe_destroy(g->dev, &g->tri_layout, &g->tri_pipe);
     rpass_destroy(g->dev, &g->rpass);
     img_destroy(g->dev, &g->imgs);
     sch_destroy(g->dev, &g->sch);
