@@ -4,6 +4,7 @@
 #include "graph/img.h"
 #include "graph/inst.h"
 #include "graph/pdev.h"
+#include "graph/rpass.h"
 #include "graph/sch.h"
 #include "graph/shader.h"
 #include "graph/win.h"
@@ -25,6 +26,7 @@ typedef struct {
     Surface_info srf_info;
     Images imgs;
     Shaders shaders;
+    VkRenderPass rpass;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -60,11 +62,16 @@ GRAPH graph_init(void) {
     if (shaders_init(g->dev, &g->shaders))
         goto err_free_img;
 
+    if (rpass_init(g->dev, g->srf_info.fmt.format, &g->rpass))
+        goto err_free_shaders;
+
     // ...
 
     shaders_destroy(g->dev, &g->shaders);
     return g;
 
+err_free_shaders:
+    shaders_destroy(g->dev, &g->shaders);
 err_free_img:
     img_destroy(g->dev, &g->imgs);
 err_free_sch:
@@ -104,6 +111,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    rpass_destroy(g->dev, &g->rpass);
     img_destroy(g->dev, &g->imgs);
     sch_destroy(g->dev, &g->sch);
     dev_destroy(&g->dev, g->qs);
