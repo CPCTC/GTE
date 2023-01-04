@@ -26,22 +26,24 @@ int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos,
 
     uint64_t create_fam_flags = 0;
 
-    uint32_t nq_flags = 0;
-    uint64_t q_flags = 0;
+    uint64_t have_q = 0;
+    uint64_t all_queues = 0;
+    for (Queue_name q = 0; q < MAX_Q; q++)
+        all_queues |= 1 << q;
 
     for (uint32_t fam = 0; fam < nfams; fam++)
         for (Queue_name q = 0; q < MAX_Q; q++)
-            if (!(q_flags & 1 << q)) {
+            if (!(have_q & 1 << q)) {
                 bool is_q;
                 if (is_queue(q, pdev, fams, fam, srf, &is_q)) {
                     free(fams);
                     return 1;
                 }
                 if (is_q) {
-                    q_flags |= 1 << q;
-                    q_infos->fams[q] = fam;
                     create_fam_flags |= 1 << fam;
-                    if (++nq_flags == MAX_Q) goto end;
+                    q_infos->fams[q] = fam;
+                    have_q |= 1 << q;
+                    if (have_q == all_queues) goto end;
                 }
             }
     free(fams);
