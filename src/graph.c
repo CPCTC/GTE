@@ -1,4 +1,5 @@
 #include "graph.h"
+#include "graph/cmd/tri.h"
 #include "graph/debug.h"
 #include "graph/dev.h"
 #include "graph/frame.h"
@@ -34,6 +35,7 @@ typedef struct {
     VkPipeline tri_pipe;
     VkFramebuffer *frames;
     Pools pools;
+    VkCommandBuffer *tri_cmds;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -84,11 +86,20 @@ GRAPH graph_init(void) {
     if (pools_init(g->dev, &g->q_infos, &g->pools))
         goto err_free_frames;
 
+    if (triangle_cmds_init(g->dev,
+                &g->q_infos, &g->pools, g->rpass,
+                g->imgs.nimgs, g->frames,
+                g->tri_pipe, g->srf_info.extent,
+                &g->tri_cmds))
+        goto err_free_pools;
+
     // ...
 
     shaders_destroy(g->dev, &g->shaders);
     return g;
 
+err_free_pools:
+    pools_destroy(g->dev, &g->pools);
 err_free_frames:
     frames_destroy(g->dev, &g->imgs, &g->frames);
 err_free_pipe:
@@ -136,6 +147,9 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    triangle_cmds_destroy(g->dev,
+            &g->q_infos, &g->pools,
+            g->imgs.nimgs, &g->tri_cmds);
     pools_destroy(g->dev, &g->pools);
     frames_destroy(g->dev, &g->imgs, &g->frames);
     triangle_pipe_destroy(g->dev, &g->tri_layout, &g->tri_pipe);
