@@ -24,14 +24,16 @@ int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos,
     }
     vkGetPhysicalDeviceQueueFamilyProperties(pdev, &nfams, fams);
 
-    uint64_t create_fam_flags = 0;
-
     uint64_t have_q = 0;
     uint64_t all_queues = 0;
     for (Queue_name q = 0; q < MAX_Q; q++)
         all_queues |= 1 << q;
 
-    for (uint32_t fam = 0; fam < nfams; fam++)
+    q_infos->ncreates = 0;
+
+    for (uint32_t fam = 0; fam < nfams; fam++) {
+        bool create_fam = 0;
+
         for (Queue_name q = 0; q < MAX_Q; q++)
             if (!(have_q & 1 << q)) {
                 bool is_q;
@@ -40,25 +42,13 @@ int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos,
                     return 1;
                 }
                 if (is_q) {
-                    create_fam_flags |= 1 << fam;
+                    create_fam = 1;
                     q_infos->fams[q] = fam;
                     have_q |= 1 << q;
-                    if (have_q == all_queues) goto end;
                 }
             }
-    free(fams);
-    VkPhysicalDeviceProperties prop;
-    vkGetPhysicalDeviceProperties(pdev, &prop);
-    fprintf(stderr, "Device %s: Not enough queues.\n", prop.deviceName);
-    *works = 0;
-    return 0;
-end:
-    free(fams);
 
-    uint32_t fam = 0;
-    q_infos->ncreates = 0;
-    while (create_fam_flags) {
-        if (create_fam_flags & 1) {
+        if (create_fam) {
             q_infos->creates[q_infos->ncreates++] = (VkDeviceQueueCreateInfo) {
                 .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                 .pNext = NULL,
@@ -68,8 +58,16 @@ end:
                 .pQueuePriorities = &QUEUE_PRI,
             };
         }
-        fam++;
-        create_fam_flags >>= 1;
+    }
+
+    free(fams);
+
+    if (have_q != all_queues) {
+        VkPhysicalDeviceProperties prop;
+        vkGetPhysicalDeviceProperties(pdev, &prop);
+        fprintf(stderr, "Device %s: Not enough queues.\n", prop.deviceName);
+        *works = 0;
+        return 0;
     }
 
     *works = 1;
