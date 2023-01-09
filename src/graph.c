@@ -86,8 +86,7 @@ GRAPH graph_init(void) {
     if (pools_init(g->dev, &g->q_infos, &g->pools))
         goto err_free_frames;
 
-    if (triangle_cmds_init(g->dev,
-                &g->q_infos, &g->pools, g->rpass,
+    if (triangle_cmds_init(g->dev, &g->pools, g->rpass,
                 g->imgs.nimgs, g->frames,
                 g->tri_pipe, g->srf_info.extent,
                 &g->tri_cmds))
@@ -147,8 +146,7 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
-    triangle_cmds_destroy(g->dev,
-            &g->q_infos, &g->pools,
+    triangle_cmds_destroy(g->dev, &g->pools,
             g->imgs.nimgs, &g->tri_cmds);
     pools_destroy(g->dev, &g->pools);
     frames_destroy(g->dev, &g->imgs, &g->frames);

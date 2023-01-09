@@ -23,9 +23,10 @@ VkDevice dev_init(VkPhysicalDevice pdev, Queue_infos q_infos, Queues queues) {
         vulk_err(stderr, r);
         return NULL;
     }
-    for (Queue_name i = 0; i < MAX_Q; i++) {
-        vkGetDeviceQueue(dev, q_infos.fams[i], 0, queues + i);
-    }
+    for (Queue_name i = 0; i < MAX_Q; i++)
+        vkGetDeviceQueue(dev,
+                q_infos.creates[q_infos.by_q[i]].queueFamilyIndex,
+                0, queues + i);
     return dev;
 }
 

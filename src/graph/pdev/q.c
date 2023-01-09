@@ -43,7 +43,7 @@ int create_queues(VkPhysicalDevice pdev, VkSurfaceKHR srf, Queue_infos *q_infos,
                 }
                 if (is_q) {
                     create_fam = 1;
-                    q_infos->fams[q] = fam;
+                    q_infos->by_q[q] = q_infos->ncreates;
                     have_q |= 1 << q;
                 }
             }

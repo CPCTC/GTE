@@ -2,11 +2,11 @@
 
 #include "graph/glfw.h"
 #include "graph/pdev.h"
-#include <stdbool.h>
 
 typedef struct {
-    bool used[MAX_Q];
-    VkCommandPool pools[MAX_Q]; // sparse; indexed by family
+    uint32_t npools;
+    VkCommandPool pools[MAX_Q]; // indexed via by_q values
+    uint32_t by_q[MAX_Q]; // indexed by queue name
 } Pools;
 
 int pools_init(VkDevice dev, const Queue_infos *q_infos, Pools *pools);

@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int triangle_cmds_init(VkDevice dev,
-        const Queue_infos *q_infos, const Pools *pools, VkRenderPass rpass,
+int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
         uint32_t nframes, VkFramebuffer *frames,
         VkPipeline pipe, VkExtent2D ext,
         VkCommandBuffer **cmds) {
@@ -19,7 +18,7 @@ int triangle_cmds_init(VkDevice dev,
     VkCommandBufferAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = NULL,
-        .commandPool = pools->pools[q_infos->fams[GRAPHICS_Q]],
+        .commandPool = pools->pools[pools->by_q[GRAPHICS_Q]],
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = nframes,
     };
@@ -75,7 +74,7 @@ int triangle_cmds_init(VkDevice dev,
     return 0;
 
 err_free_cmds:
-    vkFreeCommandBuffers(dev, pools->pools[q_infos->fams[GRAPHICS_Q]],
+    vkFreeCommandBuffers(dev, pools->pools[pools->by_q[GRAPHICS_Q]],
             nframes, *cmds);
 err_free_array:
     free(*cmds);
@@ -84,10 +83,9 @@ err_retn:
     return 1;
 }
 
-void triangle_cmds_destroy(VkDevice dev,
-        const Queue_infos *q_infos, const Pools *pools,
+void triangle_cmds_destroy(VkDevice dev, const Pools *pools,
         uint32_t ncmds, VkCommandBuffer **cmds) {
-    vkFreeCommandBuffers(dev, pools->pools[q_infos->fams[GRAPHICS_Q]],
+    vkFreeCommandBuffers(dev, pools->pools[pools->by_q[GRAPHICS_Q]],
             ncmds, *cmds);
     free(*cmds);
     *cmds = NULL;

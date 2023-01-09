@@ -4,12 +4,10 @@
 #include "graph/pdev.h"
 #include "graph/pool.h"
 
-int triangle_cmds_init(VkDevice dev,
-        const Queue_infos *q_infos, const Pools *pools, VkRenderPass rpass,
+int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
         uint32_t nframes, VkFramebuffer *frames,
         VkPipeline pipe, VkExtent2D ext,
         VkCommandBuffer **cmds);
 
-void triangle_cmds_destroy(VkDevice dev,
-        const Queue_infos *q_infos, const Pools *pools,
+void triangle_cmds_destroy(VkDevice dev, const Pools *pools,
         uint32_t ncmds, VkCommandBuffer **cmds);
