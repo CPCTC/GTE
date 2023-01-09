@@ -5,14 +5,15 @@
 
 int frames_init(VkDevice dev,
         const Images *imgs, VkRenderPass rpass, VkExtent2D ext,
-        VkFramebuffer **frames) {
-    *frames = calloc(imgs->nimgs, sizeof (VkFramebuffer));
-    if (!*frames) {
-        fprintf(stderr, "Can't calloc: %s\n", strerror(errno));
+        Frames *frames) {
+    frames->nframes = imgs->nimgs;
+    frames->frames = malloc(frames->nframes * sizeof (VkFramebuffer));
+    if (!frames->frames) {
+        fprintf(stderr, "Can't malloc: %s\n", strerror(errno));
         goto err_retn;
     }
 
-    for (uint32_t i = 0; i < imgs->nimgs; i++) {
+    for (uint32_t i = 0; i < frames->nframes; i++) {
         VkFramebufferCreateInfo info = {
             .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .pNext = NULL,
@@ -25,29 +26,30 @@ int frames_init(VkDevice dev,
             .layers = 1,
         };
 
-        VkResult r = vkCreateFramebuffer(dev, &info, NULL, (*frames) + i);
+        VkResult r = vkCreateFramebuffer(dev, &info, NULL, frames->frames + i);
         if (r != VK_SUCCESS) {
             fprintf(stderr, "Can't vkCreateFramebuffer: ");
             vulk_err(stderr, r);
-            goto err_free_frames;
+            while (i)
+                vkDestroyFramebuffer(dev, frames->frames[i], NULL);
+            goto err_free;
         }
     }
 
     return 0;
 
-err_free_frames:
-    for (uint32_t i = 0; i < imgs->nimgs; i++)
-        if ((*frames)[i])
-            vkDestroyFramebuffer(dev, (*frames)[i], NULL);
-    free(*frames);
+err_free:
+    free(frames->frames);
 err_retn:
-    *frames = NULL;
+    frames->nframes = 0;
+    frames->frames = NULL;
     return 1;
 }
 
-void frames_destroy(VkDevice dev, const Images *imgs, VkFramebuffer **frames) {
-    for (uint32_t i = 0; i < imgs->nimgs; i++)
-        vkDestroyFramebuffer(dev, (*frames)[i], NULL);
-    free(*frames);
-    *frames = NULL;
+void frames_destroy(VkDevice dev, Frames *frames) {
+    for (uint32_t i = 0; i < frames->nframes; i++)
+        vkDestroyFramebuffer(dev, frames->frames[i], NULL);
+    free(frames->frames);
+    frames->nframes = 0;
+    frames->frames = NULL;
 }

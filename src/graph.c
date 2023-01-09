@@ -33,9 +33,9 @@ typedef struct {
     VkRenderPass rpass;
     VkPipelineLayout tri_layout;
     VkPipeline tri_pipe;
-    VkFramebuffer *frames;
+    Frames frames;
     Pools pools;
-    VkCommandBuffer *tri_cmds;
+    Triangle_cmds tri_cmds;
 } Graph;
 
 GRAPH graph_init(void) {
@@ -87,8 +87,7 @@ GRAPH graph_init(void) {
         goto err_free_frames;
 
     if (triangle_cmds_init(g->dev, &g->pools, g->rpass,
-                g->imgs.nimgs, g->frames,
-                g->tri_pipe, g->srf_info.extent,
+                &g->frames, g->tri_pipe, g->srf_info.extent,
                 &g->tri_cmds))
         goto err_free_pools;
 
@@ -100,7 +99,7 @@ GRAPH graph_init(void) {
 err_free_pools:
     pools_destroy(g->dev, &g->pools);
 err_free_frames:
-    frames_destroy(g->dev, &g->imgs, &g->frames);
+    frames_destroy(g->dev, &g->frames);
 err_free_pipe:
     triangle_pipe_destroy(g->dev, &g->tri_layout, &g->tri_pipe);
 err_free_rpass:
@@ -146,10 +145,9 @@ int mainloop(GRAPH hg) {
 
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
-    triangle_cmds_destroy(g->dev, &g->pools,
-            g->imgs.nimgs, &g->tri_cmds);
+    triangle_cmds_destroy(g->dev, &g->pools, &g->tri_cmds);
     pools_destroy(g->dev, &g->pools);
-    frames_destroy(g->dev, &g->imgs, &g->frames);
+    frames_destroy(g->dev, &g->frames);
     triangle_pipe_destroy(g->dev, &g->tri_layout, &g->tri_pipe);
     rpass_destroy(g->dev, &g->rpass);
     img_destroy(g->dev, &g->imgs);

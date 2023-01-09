@@ -6,11 +6,11 @@
 #include <string.h>
 
 int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
-        uint32_t nframes, VkFramebuffer *frames,
-        VkPipeline pipe, VkExtent2D ext,
-        VkCommandBuffer **cmds) {
-    *cmds = malloc(nframes * sizeof (VkCommandBuffer));
-    if (!*cmds) {
+        const Frames *frames, VkPipeline pipe, VkExtent2D ext,
+        Triangle_cmds *cmds) {
+    cmds->nbufs = frames->nframes;
+    cmds->bufs = malloc(cmds->nbufs * sizeof (VkCommandBuffer));
+    if (!cmds->bufs) {
         fprintf(stderr, "Can't malloc: %s\n", strerror(errno));
         goto err_retn;
     }
@@ -20,23 +20,23 @@ int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
         .pNext = NULL,
         .commandPool = pools->pools[pools->by_q[GRAPHICS_Q]],
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = nframes,
+        .commandBufferCount = cmds->nbufs,
     };
-    VkResult r = vkAllocateCommandBuffers(dev, &alloc_info, *cmds);
+    VkResult r = vkAllocateCommandBuffers(dev, &alloc_info, cmds->bufs);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkAllocateCommandBuffers: ");
         vulk_err(stderr, r);
         goto err_free_array;
     }
 
-    for (uint32_t frame = 0; frame < nframes; frame++) {
+    for (uint32_t frame = 0; frame < frames->nframes; frame++) {
         VkCommandBufferBeginInfo begin_info = {
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
             .pNext = NULL,
             .flags = 0,
             .pInheritanceInfo = NULL,
         };
-        r = vkBeginCommandBuffer((*cmds)[frame], &begin_info);
+        r = vkBeginCommandBuffer(cmds->bufs[frame], &begin_info);
         if (r != VK_SUCCESS) {
             fprintf(stderr, "Can't vkBeginCommandBuffer: ");
             vulk_err(stderr, r);
@@ -48,7 +48,7 @@ int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
             .pNext = NULL,
             .renderPass = rpass,
-            .framebuffer = frames[frame],
+            .framebuffer = frames->frames[frame],
             .renderArea = {
                 .offset = {0, 0},
                 .extent = ext,
@@ -56,14 +56,14 @@ int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
             .clearValueCount = 1,
             .pClearValues = &clear,
         };
-        vkCmdBeginRenderPass((*cmds)[frame], &rpass_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(cmds->bufs[frame], &rpass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline((*cmds)[frame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipe);
-        vkCmdDraw((*cmds)[frame], 3, 1, 0, 0);
+        vkCmdBindPipeline(cmds->bufs[frame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipe);
+        vkCmdDraw(cmds->bufs[frame], 3, 1, 0, 0);
 
-        vkCmdEndRenderPass((*cmds)[frame]);
+        vkCmdEndRenderPass(cmds->bufs[frame]);
 
-        r = vkEndCommandBuffer((*cmds)[frame]);
+        r = vkEndCommandBuffer(cmds->bufs[frame]);
         if (r != VK_SUCCESS) {
             fprintf(stderr, "Can't vkEndCommandBuffer: ");
             vulk_err(stderr, r);
@@ -75,18 +75,19 @@ int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
 
 err_free_cmds:
     vkFreeCommandBuffers(dev, pools->pools[pools->by_q[GRAPHICS_Q]],
-            nframes, *cmds);
+            cmds->nbufs, cmds->bufs);
 err_free_array:
-    free(*cmds);
-    *cmds = NULL;
+    free(cmds->bufs);
 err_retn:
+    cmds->nbufs = 0;
+    cmds->bufs = NULL;
     return 1;
 }
 
-void triangle_cmds_destroy(VkDevice dev, const Pools *pools,
-        uint32_t ncmds, VkCommandBuffer **cmds) {
+void triangle_cmds_destroy(VkDevice dev, const Pools *pools, Triangle_cmds *cmds) {
     vkFreeCommandBuffers(dev, pools->pools[pools->by_q[GRAPHICS_Q]],
-            ncmds, *cmds);
-    free(*cmds);
-    *cmds = NULL;
+            cmds->nbufs, cmds->bufs);
+    free(cmds->bufs);
+    cmds->nbufs = 0;
+    cmds->bufs = NULL;
 }
