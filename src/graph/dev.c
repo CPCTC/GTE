@@ -3,9 +3,14 @@
 #include <stdlib.h>
 
 VkDevice dev_init(VkPhysicalDevice pdev, Queue_infos q_infos, Queues queues) {
+    Dev_features feats;
+    dev_features_init(&feats);
+    for (uint32_t i = 0; i < NDEV_FEATURE_NAMES; i++)
+        *(VkBool32 *) (((unsigned char *) &feats) + DEV_FEATURE_NAMES[i].off) = VK_TRUE;
+
     VkDeviceCreateInfo dc_info = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = NULL,
+        .pNext = &feats.v1_0,
         .flags = 0,
         .queueCreateInfoCount = q_infos.ncreates,
         .pQueueCreateInfos = q_infos.creates,

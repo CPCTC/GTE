@@ -1,4 +1,5 @@
 #include "graph/pdev/ext.h"
+#include "graph/dev_ext.h"
 #include "graph/nameset.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -57,4 +58,21 @@ out_free_props:
     free(props);
 out_retn:
     return ret;
+}
+
+void check_dev_features(VkPhysicalDevice dev, bool *works) {
+    Dev_features feats;
+    dev_features_init(&feats);
+    vkGetPhysicalDeviceFeatures2(dev, &feats.v1_0);
+
+    *works = 1;
+    for (uint32_t i = 0; i < NDEV_FEATURE_NAMES; i++)
+        if (!*(VkBool32 *) (((unsigned char *) &feats) + DEV_FEATURE_NAMES[i].off)) {
+            VkPhysicalDeviceProperties prop;
+            vkGetPhysicalDeviceProperties(dev, &prop);
+            fprintf(stderr, "Device %s: Unsupported feature %s\n",
+                    prop.deviceName, DEV_FEATURE_NAMES[i].name);
+            *works = 0;
+            break;
+        }
 }

@@ -73,9 +73,14 @@ int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf, uint32_t *score, Queue_info
         version_warning(stderr, props.apiVersion);
         return 0;
     }
+
     bool works;
     if (check_dev_exts(dev, NDEV_EXTENSIONS, DEV_EXTENSIONS, &works)) return 1;
     if (!works) return 0;
+
+    check_dev_features(dev, &works);
+    if (!works) return 0;
+
     if (create_queues(dev, srf, qs, &works)) return 1;
     if (!works) return 0;
 
