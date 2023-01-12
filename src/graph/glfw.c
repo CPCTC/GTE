@@ -40,6 +40,10 @@ void vulk_err_str(FILE *stream, VkResult r) {
         cse(VK_ERROR_FRAGMENTATION);
         cse(VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS);
         cse(VK_PIPELINE_COMPILE_REQUIRED);
+        cse(VK_ERROR_SURFACE_LOST_KHR);
+        cse(VK_ERROR_NATIVE_WINDOW_IN_USE_KHR);
+        cse(VK_SUBOPTIMAL_KHR);
+        cse(VK_ERROR_OUT_OF_DATE_KHR);
         default:
             fprintf(stream, "error %d", r);
             return;

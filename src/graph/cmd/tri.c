@@ -33,7 +33,7 @@ int triangle_cmds_init(VkDevice dev, const Pools *pools, VkRenderPass rpass,
         VkCommandBufferBeginInfo begin_info = {
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
             .pNext = NULL,
-            .flags = 0,
+            .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
             .pInheritanceInfo = NULL,
         };
         r = vkBeginCommandBuffer(cmds->bufs[frame], &begin_info);

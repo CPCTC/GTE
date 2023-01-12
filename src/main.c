@@ -25,8 +25,8 @@ int main(int argc, const char *const *argv) {
     // < set mainloop callbacks >
     // < set mainloop data pointers >
 
-    int ret = mainloop(graph);
+    while (!graph_draw(graph));
     graph_destroy(&graph);
     close_buff(&blocks); start = NULL;
-    return ret;
+    return 0;
 }

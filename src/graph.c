@@ -1,42 +1,12 @@
 #include "graph.h"
-#include "graph/cmd/tri.h"
+#include "graph/priv.h"
 #include "graph/debug.h"
 #include "graph/dev.h"
-#include "graph/frame.h"
-#include "graph/img.h"
 #include "graph/inst.h"
-#include "graph/pdev.h"
 #include "graph/pipe/tri.h"
-#include "graph/pool.h"
 #include "graph/rpass.h"
-#include "graph/sch.h"
-#include "graph/shader.h"
 #include "graph/win.h"
 #include <stdlib.h>
-
-#include <unistd.h>
-#include <stdio.h>
-
-typedef struct {
-    GLFWwindow *win;
-    VkInstance inst;
-    VkDebugUtilsMessengerEXT msgr;
-    VkSurfaceKHR srf;
-    VkPhysicalDevice pdev;
-    Queue_infos q_infos;
-    VkDevice dev;
-    Queues qs;
-    VkSwapchainKHR sch;
-    Surface_info srf_info;
-    Images imgs;
-    Shaders shaders;
-    VkRenderPass rpass;
-    VkPipelineLayout tri_layout;
-    VkPipeline tri_pipe;
-    Frames frames;
-    Pools pools;
-    Triangle_cmds tri_cmds;
-} Graph;
 
 GRAPH graph_init(void) {
     Graph *g = malloc(sizeof (Graph));
@@ -91,11 +61,14 @@ GRAPH graph_init(void) {
                 &g->tri_cmds))
         goto err_free_pools;
 
-    // ...
+    if (sync_init(g->dev, &g->sync))
+        goto err_free_tri_cmds;
 
     shaders_destroy(g->dev, &g->shaders);
     return g;
 
+err_free_tri_cmds:
+    triangle_cmds_destroy(g->dev, &g->pools, &g->tri_cmds);
 err_free_pools:
     pools_destroy(g->dev, &g->pools);
 err_free_frames:
@@ -128,23 +101,10 @@ err_retn:
     return NULL;
 }
 
-int mainloop(GRAPH hg) {
-    Graph *g = hg;
-    (void) g;
-
-    uint32_t ver;
-    vkEnumerateInstanceVersion(&ver);
-    printf("Welcome to Vulkan v.%u.%u.%u-var%u)!\n",
-            VK_API_VERSION_MAJOR(ver),
-            VK_API_VERSION_MINOR(ver),
-            VK_API_VERSION_PATCH(ver),
-            VK_API_VERSION_VARIANT(ver));
-    sleep(5);
-    return 0;
-}
-
 void graph_destroy(GRAPH *hg) {
     Graph *g = *hg;
+    vkDeviceWaitIdle(g->dev);
+    sync_destroy(g->dev, &g->sync);
     triangle_cmds_destroy(g->dev, &g->pools, &g->tri_cmds);
     pools_destroy(g->dev, &g->pools);
     frames_destroy(g->dev, &g->frames);
