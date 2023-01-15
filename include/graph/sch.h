@@ -13,7 +13,6 @@ typedef struct {
     VkSurfaceFormatKHR fmt;
     VkExtent2D extent;
     VkSurfaceTransformFlagBitsKHR xform;
-    VkPresentModeKHR prmode;
 } Surface_info;
 
 Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,

@@ -1,6 +1,7 @@
 #include "graph/pdev.h"
 #include "graph/pdev/ext.h"
 #include "graph/pdev/q.h"
+#include "graph/pdev/sch.h"
 #include "graph/dev_ext.h"
 #include "graph/ver.h"
 #include <errno.h>
@@ -79,6 +80,9 @@ int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf, uint32_t *score, Queue_info
     if (!works) return 0;
 
     check_dev_features(dev, &works);
+    if (!works) return 0;
+
+    if (check_dev_prmodes(dev, srf, &works)) return 1;
     if (!works) return 0;
 
     if (create_queues(dev, srf, qs, &works)) return 1;

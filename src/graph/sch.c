@@ -8,7 +8,6 @@
 static int check_srf(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
 static int check_srf_caps(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
 static int check_srf_fmts(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
-static int check_srf_prmodes(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
 static uint32_t clamp_1D(uint32_t low, uint32_t x, uint32_t high);
 static VkExtent2D clamp_2D(VkExtent2D low, VkExtent2D x, VkExtent2D high);
 
@@ -36,7 +35,7 @@ Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,
         .pQueueFamilyIndices = NULL,
         .preTransform = srfinfo->xform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = srfinfo->prmode,
+        .presentMode = VK_PRESENT_MODE_MAILBOX_KHR,
         .clipped = VK_TRUE,
         .oldSwapchain = NULL,
     };
@@ -58,8 +57,7 @@ void sch_destroy(VkDevice dev, VkSwapchainKHR *sch) {
 int check_srf(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo) {
     return
         check_srf_caps(pdev, srf, srfinfo) ||
-        check_srf_fmts(pdev, srf, srfinfo) ||
-        check_srf_prmodes(pdev, srf, srfinfo);
+        check_srf_fmts(pdev, srf, srfinfo);
 }
 
 int check_srf_caps(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo) {
@@ -116,43 +114,6 @@ int check_srf_fmts(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinf
 
 out_free:
     free(fmts);
-out_retn:
-    return ret;
-}
-
-int check_srf_prmodes(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo) {
-    int ret = 1;
-
-    uint32_t nmodes;
-    VkResult r = vkGetPhysicalDeviceSurfacePresentModesKHR(pdev, srf, &nmodes, NULL);
-    if (r != VK_SUCCESS) {
-        fprintf(stderr, "Can't vkGetPhysicalDeviceSurfacePresentModesKHR: ");
-        vulk_err(stderr, r);
-        goto out_retn;
-    }
-    VkPresentModeKHR *modes = malloc(nmodes * sizeof (VkPresentModeKHR));
-    if (!modes) {
-        fprintf(stderr, "Can't malloc: %s\n", strerror(errno));
-        goto out_retn;
-    }
-    r = vkGetPhysicalDeviceSurfacePresentModesKHR(pdev, srf, &nmodes, modes);
-    if (r != VK_SUCCESS) {
-        fprintf(stderr, "Can't vkGetPhysicalDeviceSurfacePresentModesKHR: ");
-        vulk_err(stderr, r);
-        goto out_free;
-    }
-
-    ret = 0;
-
-    srfinfo->prmode = VK_PRESENT_MODE_FIFO_KHR; // Always supported
-    for (uint32_t i = 0; i < nmodes; i++)
-        if (modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
-            srfinfo->prmode = modes[i];
-            break;
-        }
-
-out_free:
-    free(modes);
 out_retn:
     return ret;
 }
