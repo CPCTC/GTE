@@ -4,9 +4,13 @@
 int graph_draw(GRAPH hg) {
     Graph *g = hg;
 
+    uint32_t sync_obj;
+    if (sync_request(g->dev, &g->sync, &sync_obj))
+        return 1;
+
     uint32_t img;
     VkResult r = vkAcquireNextImageKHR(g->dev, g->sch, UINT64_MAX,
-            g->sync.sem[IMG_SEM], NULL, &img);
+            g->sync.obj_s[sync_obj], NULL, &img);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkAcquireNextImageKHR: ");
         vulk_err(stderr, r);
@@ -16,7 +20,7 @@ int graph_draw(GRAPH hg) {
     VkSemaphoreSubmitInfo wait_sem_img = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
         .pNext = NULL,
-        .semaphore = g->sync.sem[IMG_SEM],
+        .semaphore = g->sync.obj_s[sync_obj],
         .value = 0,
         .stageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
         .deviceIndex = 0,
@@ -30,7 +34,7 @@ int graph_draw(GRAPH hg) {
     VkSemaphoreSubmitInfo sig_sem_pipe = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
         .pNext = NULL,
-        .semaphore = g->sync.sem[PIPE_SEM],
+        .semaphore = g->sync.grps[img][PIPE_SEM],
         .value = 0,
         .stageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
         .deviceIndex = 0,
@@ -46,7 +50,7 @@ int graph_draw(GRAPH hg) {
         .signalSemaphoreInfoCount = 1,
         .pSignalSemaphoreInfos = &sig_sem_pipe,
     };
-    r = vkQueueSubmit2(g->qs[GRAPHICS_Q], 1, &submit_info, NULL);
+    r = vkQueueSubmit2(g->qs[GRAPHICS_Q], 1, &submit_info, g->sync.obj_f[sync_obj]);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkQueueSubmit2: ");
         vulk_err(stderr, r);
@@ -57,13 +61,12 @@ int graph_draw(GRAPH hg) {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pNext = NULL,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &g->sync.sem[PIPE_SEM],
+        .pWaitSemaphores = &g->sync.grps[img][PIPE_SEM],
         .swapchainCount = 1,
         .pSwapchains = &g->sch,
         .pImageIndices = &img,
         .pResults = NULL,
     };
-
     r = vkQueuePresentKHR(g->qs[PRESENT_Q], &present_info);
     if (r != VK_SUCCESS) {
         fprintf(stderr, "Can't vkQueuePresentKHR: ");

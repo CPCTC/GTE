@@ -61,7 +61,7 @@ GRAPH graph_init(void) {
                 &g->tri_cmds))
         goto err_free_pools;
 
-    if (sync_init(g->dev, &g->sync))
+    if (sync_init(g->dev, g->imgs.nimgs, &g->sync))
         goto err_free_tri_cmds;
 
     shaders_destroy(g->dev, &g->shaders);
