@@ -26,13 +26,13 @@ GRAPH graph_init(void) {
     g->srf = srf_init(g->inst, g->win);
     if (!g->srf) goto err_stop_debug;
 
-    g->pdev = select_pdev(g->inst, g->srf, &g->q_infos);
+    g->pdev = select_pdev(g->inst, g->srf, &g->srf_info, &g->q_infos);
     if (!g->pdev) goto err_free_srf;
 
     g->dev = dev_init(g->pdev, g->q_infos, g->qs);
     if (!g->dev) goto err_free_srf;
 
-    if (sch_init(g->dev, g->pdev, g->srf, &g->sch, &g->srf_info))
+    if (sch_init(g->dev, g->srf, &g->srf_info, &g->sch))
         goto err_free_dev;
 
     if (img_init(g->dev, g->sch, g->srf_info, &g->imgs))

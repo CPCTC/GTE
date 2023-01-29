@@ -1,7 +1,7 @@
 #include "graph/pdev.h"
 #include "graph/pdev/ext.h"
 #include "graph/pdev/q.h"
-#include "graph/pdev/sch.h"
+#include "graph/pdev/srf.h"
 #include "graph/dev_ext.h"
 #include "graph/ver.h"
 #include <errno.h>
@@ -11,11 +11,13 @@
 
 //
 
-static int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf, uint32_t *score, Queue_infos *qs);
+static int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf,
+        uint32_t *score, Surface_info *srfinfo, Queue_infos *qs);
 
 //
 
-VkPhysicalDevice select_pdev(VkInstance inst, VkSurfaceKHR srf, Queue_infos *qs) {
+VkPhysicalDevice select_pdev(VkInstance inst, VkSurfaceKHR srf,
+        Surface_info *srfinfo, Queue_infos *qs) {
     VkPhysicalDevice ret = NULL;
 
     uint32_t ndevs;
@@ -40,12 +42,15 @@ VkPhysicalDevice select_pdev(VkInstance inst, VkSurfaceKHR srf, Queue_infos *qs)
     uint32_t best_dev = 0;
     uint32_t best_score = 0;
     for (uint32_t i = 0; i < ndevs; i++) {
+        Surface_info dev_srfinfo;
         Queue_infos dev_qs;
         uint32_t score;
-        if (rate_dev(devs[i], srf, &score, &dev_qs)) goto out_free_devs;
+        if (rate_dev(devs[i], srf, &score, &dev_srfinfo, &dev_qs))
+            goto out_free_devs;
         if (score > best_score) {
             best_dev = i;
             best_score = score;
+            *srfinfo = dev_srfinfo;
             *qs = dev_qs;
         }
     }
@@ -63,7 +68,8 @@ out_retn:
     return ret;
 }
 
-int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf, uint32_t *score, Queue_infos *qs) {
+int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf,
+        uint32_t *score, Surface_info *srfinfo, Queue_infos *qs) {
     *score = 0;
 
     VkPhysicalDeviceProperties props;
@@ -82,7 +88,7 @@ int rate_dev(VkPhysicalDevice dev, VkSurfaceKHR srf, uint32_t *score, Queue_info
     check_dev_features(dev, &works);
     if (!works) return 0;
 
-    if (check_dev_prmodes(dev, srf, &works)) return 1;
+    if (check_srf(dev, srf, srfinfo, &works)) return 1;
     if (!works) return 0;
 
     if (create_queues(dev, srf, qs, &works)) return 1;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graph/glfw.h"
+#include "graph/pdev.h"
 
 typedef enum {
     SCH_FAIL = -1,
@@ -8,13 +9,6 @@ typedef enum {
     SCH_AGAIN = 1,
 } Sch_status;
 
-typedef struct {
-    uint32_t nimages;
-    VkSurfaceFormatKHR fmt;
-    VkExtent2D extent;
-    VkSurfaceTransformFlagBitsKHR xform;
-} Surface_info;
-
-Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,
-        VkSwapchainKHR *sch, Surface_info *srfinfo);
+Sch_status sch_init(VkDevice dev, VkSurfaceKHR srf, const Surface_info *srfinfo,
+        VkSwapchainKHR *sch);
 void sch_destroy(VkDevice dev, VkSwapchainKHR *sch);

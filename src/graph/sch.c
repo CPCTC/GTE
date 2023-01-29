@@ -5,18 +5,8 @@
 
 //
 
-static int check_srf(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
-static int check_srf_caps(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
-static int check_srf_fmts(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo);
-static uint32_t clamp_1D(uint32_t low, uint32_t x, uint32_t high);
-static VkExtent2D clamp_2D(VkExtent2D low, VkExtent2D x, VkExtent2D high);
-
-//
-
-Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,
-        VkSwapchainKHR *sch, Surface_info *srfinfo) {
-    if (check_srf(pdev, srf, srfinfo))
-        return SCH_FAIL;
+Sch_status sch_init(VkDevice dev, VkSurfaceKHR srf, const Surface_info *srfinfo,
+        VkSwapchainKHR *sch) {
     if (srfinfo->extent.width == 0 || srfinfo->extent.height == 0)
         return SCH_AGAIN;
     VkSwapchainCreateInfoKHR info = {
@@ -35,7 +25,7 @@ Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,
         .pQueueFamilyIndices = NULL,
         .preTransform = srfinfo->xform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = VK_PRESENT_MODE_MAILBOX_KHR,
+        .presentMode = srfinfo->prmode,
         .clipped = VK_TRUE,
         .oldSwapchain = NULL,
     };
@@ -52,82 +42,4 @@ Sch_status sch_init(VkDevice dev, VkPhysicalDevice pdev, VkSurfaceKHR srf,
 void sch_destroy(VkDevice dev, VkSwapchainKHR *sch) {
     vkDestroySwapchainKHR(dev, *sch, NULL);
     *sch = NULL;
-}
-
-int check_srf(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo) {
-    return
-        check_srf_caps(pdev, srf, srfinfo) ||
-        check_srf_fmts(pdev, srf, srfinfo);
-}
-
-int check_srf_caps(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo) {
-    VkSurfaceCapabilitiesKHR caps;
-    VkResult r = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdev, srf, &caps);
-    if (r != VK_SUCCESS) {
-        fprintf(stderr, "Can't vkGetPhysicalDeviceSurfaceCapabilitiesKHR: ");
-        vulk_err(stderr, r);
-        return 1;
-    }
-
-    srfinfo->nimages = clamp_1D(caps.minImageCount, 3, caps.maxImageCount ? caps.maxImageCount : (uint32_t) -1);
-    srfinfo->extent = clamp_2D(caps.minImageExtent, caps.currentExtent, caps.maxImageExtent);
-    srfinfo->xform = caps.currentTransform;
-
-    return 0;
-}
-
-int check_srf_fmts(VkPhysicalDevice pdev, VkSurfaceKHR srf, Surface_info *srfinfo) {
-    int ret = 1;
-
-    uint32_t nfmts;
-    VkResult r = vkGetPhysicalDeviceSurfaceFormatsKHR(pdev, srf, &nfmts, NULL);
-    if (r != VK_SUCCESS) {
-        fprintf(stderr, "Can't vkGetPhysicalDeviceSurfaceFormatsKHR: ");
-        vulk_err(stderr, r);
-        goto out_retn;
-    }
-    VkSurfaceFormatKHR *fmts = malloc(nfmts * sizeof (VkSurfaceFormatKHR));
-    if (!fmts) {
-        fprintf(stderr, "Can't malloc: %s\n", strerror(errno));
-        goto out_retn;
-    }
-    r = vkGetPhysicalDeviceSurfaceFormatsKHR(pdev, srf, &nfmts, fmts);
-    if (r != VK_SUCCESS) {
-        fprintf(stderr, "Can't vkGetPhysicalDeviceSurfaceFormatsKHR: ");
-        vulk_err(stderr, r);
-        goto out_free;
-    }
-
-    ret = 0;
-
-    VkSurfaceFormatKHR preferred = {
-        .format = VK_FORMAT_B8G8R8A8_SRGB,
-        .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-    };
-    uint32_t best = 0;
-    for (uint32_t i = 0; i < nfmts; i++)
-        if (fmts[i].colorSpace == preferred.colorSpace) {
-            best = i;
-            if (fmts[i].format == preferred.format) break;
-        }
-    srfinfo->fmt = fmts[best];
-
-out_free:
-    free(fmts);
-out_retn:
-    return ret;
-}
-
-uint32_t clamp_1D(uint32_t low, uint32_t x, uint32_t high) {
-    if (x < low) return low;
-    if (x > high) return high;
-    return x;
-}
-
-VkExtent2D clamp_2D(VkExtent2D low, VkExtent2D x, VkExtent2D high) {
-    VkExtent2D ret = {
-        .width = clamp_1D(low.width, x.width, high.width),
-        .height = clamp_1D(low.height, x.height, high.height),
-    };
-    return ret;
 }
