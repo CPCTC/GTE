@@ -1,8 +1,10 @@
 # GTE
-## Generic Text Editor
+## Graphics TEst
 
-The idea here is to have an extremely basic graphical text editor with only two notable features:
- a) It supports programmable keybindings, and
- b) it understands the Language Server Protocol.
+This is a Vulkan hello triangle program. I made this to learn how Vulkan (and graphics cards in general) work. As a secondary objective, I wanted to see how my RODBUS build system scaled with large codebases. The triangle ended up fine, but I was slightly disappointed by the build system, even if I was ultimately able to do some cool things with it.
 
-Since both input and output are automated, the editor doesn't need to support anything else.
+Further work:
+- Swapchain recreation
+- Anti-aliasing
+- Don't hardcode vertex data inside the shader
+- Remove vestigial text editor code
